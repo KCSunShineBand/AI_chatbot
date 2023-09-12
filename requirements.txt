@@ -1,0 +1,11 @@
+python-dotenv
+streamlit
+streamlit-oauth
+dropbox
+google-api-python-client
+oauth2client
+openai
+tiktoken
+chromadb
+langchain
+unstructured
