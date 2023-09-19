@@ -18,9 +18,9 @@ load_dotenv()
 st.header("Document Database")
 st.markdown("This is the current document database. You can upload new documents here for use in the vector store.")
 
-# if not check_password():
-    # st.stop()
-    # pass
+if not check_password():
+    st.stop()
+    pass
 
 # display the current document database
 
