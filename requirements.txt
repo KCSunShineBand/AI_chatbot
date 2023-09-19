@@ -9,3 +9,5 @@ tiktoken
 chromadb
 langchain
 unstructured
+youtube-transcript-api
+pytube
