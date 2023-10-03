@@ -29,7 +29,7 @@ tab_local, tab_drive, tab_youtube = st.tabs(["File Upload", "Google Drive", "You
 
 with tab_local:
     with st.form("upload-form", clear_on_submit=True):
-            uploaded_files = st.file_uploader("Choose Documents", accept_multiple_files=True, type=["json", "pdf", "csv", "xls", "xlsx", "txt"])
+            uploaded_files = st.file_uploader("Choose Documents", accept_multiple_files=True, type=["json", "pdf", "csv", "xls", "xlsx", "txt", "doc", "docx"])
             submitted = st.form_submit_button("Upload")
             if submitted:
                 for uploaded_file in uploaded_files:
