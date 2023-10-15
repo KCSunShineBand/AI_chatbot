@@ -12,3 +12,4 @@ unstructured
 unstructured[docx,pdf,xlsx]
 youtube-transcript-api
 pytube
+audio-recorder-streamlit

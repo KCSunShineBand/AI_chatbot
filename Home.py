@@ -2,11 +2,11 @@ import os
 import streamlit as st
 
 st.set_page_config(
-    page_title="Mental Health Chatbot 😷",
-    page_icon="😷",
+    page_title="AI Chatbot 🤖",
+    page_icon="🤖",
 )
 
-st.title("Mental Health Chatbot")
+st.title("AI Chatbot")
 
 # sidebar
 st.sidebar.write("Select topic")
@@ -17,13 +17,13 @@ st.sidebar.info("Topic 4")
 
 from langchain.schema import HumanMessage, AIMessage
 from langchain.chat_models import ChatOpenAI
-from langchain.text_splitter import CharacterTextSplitter
 from langchain.memory import ConversationBufferMemory
 from langchain.vectorstores import Chroma
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.document_loaders import DirectoryLoader
 from langchain.prompts import PromptTemplate
 from langchain.chains import ConversationalRetrievalChain
+from audio_recorder_streamlit import audio_recorder
+import openai
 
 #load environment variables
 from dotenv import load_dotenv
@@ -31,42 +31,12 @@ load_dotenv()
 
 #define llm to use
 llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-16k")
-system_prompt = "Hi, I'm a mental health assistant. I can help you with any mental health issues you may have. What would you like to talk about?"
+system_prompt = "Hi, I'm an AI assistant. What would you like to ask me?"
 
 
-# function that creates the vector store
-# creates a vectorstore from the selected files by loading them and splitting them into chunks
-def create_vectorstore():
-    # create chroma vectorstore without any documents
-    vectorstore = Chroma()
-    vectorstore._embedding_function = OpenAIEmbeddings()
-    vectorstore._persist_directory = "db_document_embeddings"
-
-    # text splitter
-    text_splitter = CharacterTextSplitter(        
-        separator = "\n\n",
-        chunk_size = 1000,
-        chunk_overlap  = 200,
-        length_function = len,
-        is_separator_regex = False,
-    )
-
-    dir_loader_pdf = DirectoryLoader('./documents', glob="**/*.pdf").load()
-    dir_loader_txt = DirectoryLoader('./documents', glob="**/*.txt").load()
-    dir_loader_csv = DirectoryLoader('./documents', glob="**/*.csv").load()
-    dir_loader_json = DirectoryLoader('./documents', glob="**/*.json").load()
-    dir_loaer_doc = DirectoryLoader('./documents', glob="**/*.doc*").load()
-    dir_loaer_xlsx = DirectoryLoader('./documents', glob="**/*.xlsx").load()
-
-    # split the documents into chunks
-    # only split if there is 1 or more documents
-    if len(dir_loader_pdf) > 0: loaded_pdf = text_splitter.split_documents(dir_loader_pdf); vectorstore.add_documents(loaded_pdf)
-    if len(dir_loader_txt) > 0: loaded_txt = text_splitter.split_documents(dir_loader_txt); vectorstore.add_documents(loaded_txt)
-    if len(dir_loader_csv) > 0: loaded_csv = text_splitter.split_documents(dir_loader_csv); vectorstore.add_documents(loaded_csv)
-    if len(dir_loader_json) > 0: loaded_json = text_splitter.split_documents(dir_loader_json); vectorstore.add_documents(loaded_json)
-    if len(dir_loaer_doc) > 0: loaded_doc = text_splitter.split_documents(dir_loaer_doc); vectorstore.add_documents(loaded_doc)
-    if len(dir_loaer_xlsx) > 0: loaded_xlsx = text_splitter.split_documents(dir_loaer_xlsx); vectorstore.add_documents(loaded_xlsx)
-
+# function that loads the vectorstore from the local directory
+def load_vectorstore():
+    vectorstore = Chroma(persist_directory="db_document_embeddings",embedding_function=OpenAIEmbeddings())
     return vectorstore
 
 def create_response(vectorstore,query):
@@ -95,7 +65,7 @@ with st.spinner('Initializing memory...'):
         st.session_state['memory'].chat_memory.add_ai_message(system_prompt)
 
 with st.spinner('Initializing vectorstore...'):
-    vectorstore = create_vectorstore()
+    vectorstore = load_vectorstore()
 
 # button to clear vectorstore
 # if st.button('Rebuild Vectorstore'):
@@ -105,12 +75,44 @@ with st.spinner('Initializing vectorstore...'):
 # warning to tell user to clear vector store if new documents were added
 # st.warning('If you have added new documents, please rebuild the vectorstore by clicking the button above.')
 
+# placeholder for the chat messages
+chat_messages_ph = st.empty()
+
 #display the chat input
-prompt = st.chat_input("Say something")
-if prompt:
-    # create the response
-    create_response(vectorstore, prompt)
-    # st.session_state['memory'].chat_memory.add_user_message(prompt)
+with st.container():
+    prompt = st.chat_input("Say something")
+    if prompt:
+        # create the response
+        create_response(vectorstore, prompt)
+        # st.session_state['memory'].chat_memory.add_user_message(prompt)
+
+# add a speech to text button
+audio_bytes = audio_recorder(sample_rate=44100,key="voice")
+if audio_bytes:
+    # random file name
+    import uuid 
+    file_name = uuid.uuid4().hex + ".wav"
+
+    # save the audio to a file
+    file = open(file_name, "wb")
+    file.write(audio_bytes)
+    file.close()
+
+    # open audio in read mode
+    file = open(file_name, "rb")
+
+    transcript = openai.Audio.transcribe("whisper-1", file, api_key = os.getenv("OPENAI_API_KEY"))
+
+    # close the file and delete it
+    file.close()
+    os.remove(file_name)
+
+    # generate the response
+    response = create_response(vectorstore, transcript.text)
+
+    # clear audio bytes
+    if 'voice' in st.session_state:
+         del st.session_state['voice']
 
 for index, message in enumerate(st.session_state['memory'].load_memory_variables({})['chat_history']):
     if isinstance(message, HumanMessage):      
@@ -122,8 +124,8 @@ for index, message in enumerate(st.session_state['memory'].load_memory_variables
             human_msg = st.chat_message("user")
             human_msg.write(message.content)
 
-# add a button to clear the memory
+# clear chat button
 if st.button('Clear Chat'):
-    st.session_state['memory'].clear()
+    st.session_state['memory'].chat_memory.clear()
     st.session_state['memory'].chat_memory.add_ai_message(system_prompt)
     st.experimental_rerun()

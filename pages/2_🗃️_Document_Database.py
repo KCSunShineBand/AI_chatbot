@@ -22,9 +22,45 @@ if not check_password():
     st.stop()
     pass
 
+# regenerates the vectorstore
+def update_vectorstore():
+    from langchain.vectorstores import Chroma
+    from langchain.embeddings import OpenAIEmbeddings
+    from langchain.document_loaders import DirectoryLoader
+    from langchain.text_splitter import CharacterTextSplitter
+
+    # create chroma vectorstore without any documents
+    vectorstore = Chroma(persist_directory="db_document_embeddings",embedding_function=OpenAIEmbeddings())
+
+    # text splitter
+    text_splitter = CharacterTextSplitter(        
+        separator = "\n\n",
+        chunk_size = 1000,
+        chunk_overlap  = 200,
+        length_function = len,
+        is_separator_regex = False,
+    )
+
+    dir_loader_pdf = DirectoryLoader('./documents', glob="**/*.pdf").load()
+    dir_loader_txt = DirectoryLoader('./documents', glob="**/*.txt").load()
+    dir_loader_csv = DirectoryLoader('./documents', glob="**/*.csv").load()
+    dir_loader_json = DirectoryLoader('./documents', glob="**/*.json").load()
+    dir_loaer_doc = DirectoryLoader('./documents', glob="**/*.doc*").load()
+    dir_loaer_xlsx = DirectoryLoader('./documents', glob="**/*.xlsx").load()
+
+    # split the documents into chunks
+    # only split if there is 1 or more documents
+    if len(dir_loader_pdf) > 0: loaded_pdf = text_splitter.split_documents(dir_loader_pdf); vectorstore.add_documents(loaded_pdf)
+    if len(dir_loader_txt) > 0: loaded_txt = text_splitter.split_documents(dir_loader_txt); vectorstore.add_documents(loaded_txt)
+    if len(dir_loader_csv) > 0: loaded_csv = text_splitter.split_documents(dir_loader_csv); vectorstore.add_documents(loaded_csv)
+    if len(dir_loader_json) > 0: loaded_json = text_splitter.split_documents(dir_loader_json); vectorstore.add_documents(loaded_json)
+    if len(dir_loaer_doc) > 0: loaded_doc = text_splitter.split_documents(dir_loaer_doc); vectorstore.add_documents(loaded_doc)
+    if len(dir_loaer_xlsx) > 0: loaded_xlsx = text_splitter.split_documents(dir_loaer_xlsx); vectorstore.add_documents(loaded_xlsx)
+
+    # destroy the vectorstore (which will also persist it to disk)
+    del vectorstore
+
 # display the current document database
-
-
 tab_local, tab_drive, tab_youtube = st.tabs(["File Upload", "Google Drive", "Youtube"])
 
 with tab_local:
@@ -214,3 +250,8 @@ for i, file in enumerate(files):
         clicked_file = file['name']
         os.remove("documents/" + clicked_file)
         st.experimental_rerun()
+
+# generate the vectorstore when the button is clicked
+if st.button('Rebuild Vectorstore'):
+    update_vectorstore()
+    st.success('Vectorstore rebuilt and saved to disk!')
