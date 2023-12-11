@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { TextField, Button, Snackbar, Container, Box, CircularProgress, Typography } from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
+// import SmartToyIcon from '@mui/icons-material/SmartToy';
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -61,11 +61,18 @@ function Login() {
           alignItems: 'center',
         }}
       >
-        {/* <Typography variant="h3" sx={{ textAlign: 'center' }}>
-          Financial AI Chatbot <SmartToyIcon />
-        </Typography> */}
-        <img src="/woke_logo.png" alt="Woke Logo" style={{ maxWidth: '100%', height: 'auto' }} />
 
+        <img 
+          src="/woke_logo.png" 
+          alt="Woke Logo" 
+          style={{ width: '50%', height: 'auto' }} 
+        />
+        <Typography variant="h5" sx={{ textAlign: 'center' }}>
+          Log in to your account
+        </Typography>
+        {/* <Typography variant="h6" sx={{ textAlign: 'center' }}> */}
+          Welcome back! Please enter your user details.
+        {/* </Typography>         */}
         <TextField
           margin="normal"
           required
