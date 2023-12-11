@@ -61,9 +61,11 @@ function Login() {
           alignItems: 'center',
         }}
       >
-        <Typography variant="h3" sx={{ textAlign: 'center' }}>
+        {/* <Typography variant="h3" sx={{ textAlign: 'center' }}>
           Financial AI Chatbot <SmartToyIcon />
-        </Typography>
+        </Typography> */}
+        <img src="/woke_logo.png" alt="Woke Logo" style={{ maxWidth: '100%', height: 'auto' }} />
+
         <TextField
           margin="normal"
           required
