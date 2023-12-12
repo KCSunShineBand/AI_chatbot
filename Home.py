@@ -182,7 +182,7 @@ with cc[2]:
 # display radio buttons to choose psychologist
 st.write('<style>div.row-widget.stRadio > div{flex-direction:row;justify-content: center;} </style>', unsafe_allow_html=True)
 st.write('<style>div.st-bf{flex-direction:column;} div.st-ag{font-weight:bold;padding-left:2px;}</style>', unsafe_allow_html=True)
-psychologist_selected = st.radio("Choose your Psychologist:",("Dr. Huang","Dr. Wong","Ms. Amy"))
+# psychologist_selected = st.radio("Choose your Psychologist:",("Dr. Huang","Dr. Wong","Ms. Amy"))
 
 # add a speech to text button
 prompt_audio = ""
